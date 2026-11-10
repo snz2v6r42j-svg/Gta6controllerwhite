@@ -1,1 +1,1 @@
-Controle met OkaySoft categorie, Galaxus en Cyberport op 11 november 2026.
+Werkelijke voorraadcontrole met 15 unit-tests na strengere OkaySoft-check.
