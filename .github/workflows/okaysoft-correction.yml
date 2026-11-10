@@ -1,8 +1,5 @@
 name: Correctie eerdere OkaySoft voorraadmelding
 on:
-  push:
-    paths:
-      - '.github/workflows/okaysoft-correction.yml'
   workflow_dispatch:
 permissions:
   contents: read
