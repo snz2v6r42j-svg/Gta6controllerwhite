@@ -1,0 +1,20 @@
+{
+  "country": "DE",
+  "minimum_previous_eur": 500,
+  "minimum_drop_percent": 80,
+  "maximum_change_age_hours": 24,
+  "pages_per_query": 2,
+  "queries": [
+    {
+      "categories": [
+        1197292
+      ]
+    },
+    {
+      "titleSearch": "Fernseher"
+    },
+    {
+      "titleSearch": "Smart TV"
+    }
+  ]
+}
