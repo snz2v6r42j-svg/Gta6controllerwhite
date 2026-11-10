@@ -24,6 +24,9 @@ class StockTests(unittest.TestCase):
         self.assertEqual(check_stock("euronics", page("In den Warenkorb"))[0], "unknown")
     def test_mueller_out(self):
         self.assertEqual(check_stock("mueller", page("Aktuell nicht lieferbar"))[0], "out")
+    def test_okaysoft_preorder(self):
+        self.assertEqual(check_stock("okaysoft", page("Vorbestellung - Versand ab: 18.11.2026"))[0], "possible")
+
     def test_structured_offer(self):
         self.assertEqual(check_stock("playstation", page('<script type="application/ld+json">{"@type":"Product","offers":{"availability":"https://schema.org/InStock"}}</script>'))[0], "possible")
 
