@@ -1,6 +1,9 @@
 name: GTA 6 White DualSense voorraadcheck
 
 on:
+  push:
+    paths:
+      - 'run-stock-check.txt'
   schedule:
     - cron: '3,13,23,33,43,53 * * * *'
   workflow_dispatch:
