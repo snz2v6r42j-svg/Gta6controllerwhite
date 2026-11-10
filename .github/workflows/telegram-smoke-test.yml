@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/telegram-smoke-test.yml'
+      - 'tracker.py'
   workflow_dispatch:
 
 permissions:
