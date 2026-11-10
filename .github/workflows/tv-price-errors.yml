@@ -1,0 +1,63 @@
+name: Amazon.de TV 80% Price Error Scanner
+
+on:
+  schedule:
+    - cron: '7,17,27,37,47,57 * * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/tv-price-errors.yml'
+      - 'tv_price_errors.py'
+      - 'tv_price_errors_config.json'
+      - 'tests/test_tv_price_errors.py'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tv-price-errors
+  cancel-in-progress: false
+
+jobs:
+  tv-price-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check if Keepa API is configured
+        id: enabled
+        env:
+          KEEPA_API_KEY: ${{ secrets.KEEPA_API_KEY }}
+        run: |
+          if [ -z "$KEEPA_API_KEY" ]; then
+            echo 'active=false' >> "$GITHUB_OUTPUT"
+            echo '## TV price error scanner: NOT ACTIVE' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Keepa API key not configured; no paid calls or Telegram alerts were made.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'active=true' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install packages
+        run: pip install -r requirements.txt
+      - name: Run offline tests
+        run: python -m unittest discover -s tests -v
+      - name: Look for Amazon.de TVs with 80 percent price drops
+        if: steps.enabled.outputs.active == 'true'
+        env:
+          KEEPA_API_KEY: ${{ secrets.KEEPA_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python tv_price_errors.py
+      - name: Save deduplication state
+        if: steps.enabled.outputs.active == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tv_price_state.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record last TV price alert [skip ci]'
+            git push
+          fi
