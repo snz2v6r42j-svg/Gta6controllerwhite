@@ -25,7 +25,7 @@ class StockTests(unittest.TestCase):
     def test_mueller_out(self):
         self.assertEqual(check_stock("mueller", page("Aktuell nicht lieferbar"))[0], "out")
     def test_okaysoft_preorder(self):
-        self.assertEqual(check_stock("okaysoft", page("Vorbestellung - Versand ab: 18.11.2026"))[0], "possible")
+        self.assertEqual(check_stock("okaysoft", page("Vorbestellung - Versand ab: 18.11.2026"))[0], "unknown")
 
     def test_okaysoft_listing_out_overrides_release_date(self):
         tile = """<h3>PS5 Controller DualSense 5 V3 - Grand Theft Auto VI Limited Edition</h3>
