@@ -1,6 +1,6 @@
 # GTA 6 DualSense White — Telegram-voorraadtracker
 
-Automatische controles voor de officiële witte GTA VI DualSense-controller bij PlayStation Direct, MediaMarkt, Saturn, Amazon.de, Müller en Euronics in Duitsland.
+Automatische controles voor de officiële witte GTA VI DualSense-controller bij PlayStation Direct, MediaMarkt, Saturn, Amazon.de, Müller, Euronics en OkaySoft in Duitsland.
 
 ## Activeren
 
