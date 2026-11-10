@@ -1,0 +1,27 @@
+name: Correctie eerdere OkaySoft voorraadmelding
+on:
+  push:
+    paths:
+      - '.github/workflows/okaysoft-correction.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  correction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Send one-time corrected stock notice
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'PY'
+          from tracker import send_telegram
+          send_telegram('CORRECTIE — OkaySoft\n\nOnze eerdere voorraadmelding was te optimistisch. De live categoriepagina vermeldt nu “Derzeit nicht verfügbar”, ondanks de voorbestelling op de productpagina.\n\nIk heb de bot aangepast: een verzenddatum alleen veroorzaakt geen alarm meer. De controller is bij OkaySoft momenteel NIET betrouwbaar als bestelbaar bevestigd. Excuses voor de verwarring.', 'https://www.okaysoft.de/PlayStation-5/Hardware1/PS5-Controller-DualSense-5-V3-Grand-Theft-Auto-VI-Limited-Edition.html')
+          PY
