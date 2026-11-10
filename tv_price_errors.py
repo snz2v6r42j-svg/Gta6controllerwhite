@@ -227,7 +227,7 @@ def fetch_deals(api_key, cfg):
 
 def compose_alert(obs):
     return (
-        "AMAZON.DE TV — VERMOEDELIJKE PRIJSFOUT!\n\n"
+        "AMAZON.DE TV — MOGELIJKE PRIJSFOUT!\n\n"
         f"{obs['title']}\n\n"
         f"Vorige prijs: {euro(obs['previous'])}\n"
         f"Prijs nu: {euro(obs['current'])}\n"
