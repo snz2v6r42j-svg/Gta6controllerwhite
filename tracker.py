@@ -140,6 +140,8 @@ def check_stock(kind, html):
         if "in den warenkorb" in text and any(x in text for x in
                 ("jetzt vorbestellen", "vorbestellung", "sofort lieferbar", "auf lager")):
             return "possible", "cart button and preorder or delivery text detected"
+        if "vorbestellung" in text and "versand ab" in text:
+            return "possible", "preorder shipping date displayed"
     elif kind == "playstation":
         if structured == "possible":
             return "possible", "structured product offer suggests pre-order/stock"
