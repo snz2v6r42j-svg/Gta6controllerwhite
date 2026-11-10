@@ -45,6 +45,10 @@ STORES = {
         "url": "https://www.euronics.de/spiele-und-konsolen-film-und-musik/playstation-5/zubehoer/dualsense-wireless-controller-gta-vi-white-limited-edition-4065465416670",
         "kind": "euronics",
     },
+    "OkaySoft": {
+        "url": "https://www.okaysoft.de/PlayStation-5/Hardware1/PS5-Controller-DualSense-5-V3-Grand-Theft-Auto-VI-Limited-Edition.html",
+        "kind": "okaysoft",
+    },
 }
 
 # Conservative: a generic 'Vorbestellen' button is not proof of current stock.
@@ -132,6 +136,10 @@ def check_stock(kind, html):
         if ("in den warenkorb" in text and any(x in text for x in
                 ("sofort lieferbar", "sofort verfügbar", "auf lager", "lieferbar in"))):
             return "possible", "purchase button and availability wording detected"
+    elif kind == "okaysoft":
+        if "in den warenkorb" in text and any(x in text for x in
+                ("jetzt vorbestellen", "vorbestellung", "sofort lieferbar", "auf lager")):
+            return "possible", "cart button and preorder or delivery text detected"
     elif kind == "playstation":
         if structured == "possible":
             return "possible", "structured product offer suggests pre-order/stock"
