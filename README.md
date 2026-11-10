@@ -1,6 +1,6 @@
 # GTA 6 DualSense White — Telegram-voorraadtracker
 
-Automatische controles voor de officiële witte GTA VI DualSense-controller bij PlayStation Direct, MediaMarkt, Saturn, Amazon.de, Müller, Euronics en OkaySoft in Duitsland.
+Automatische controles voor de officiële witte GTA VI DualSense-controller bij PlayStation Direct, MediaMarkt, Saturn, Amazon.de, Müller, Euronics, OkaySoft, Galaxus en Cyberport in Duitsland.
 
 ## Activeren
 
@@ -13,6 +13,16 @@ Automatische controles voor de officiële witte GTA VI DualSense-controller bij 
 5. Start nogmaals met `test_message` uit om de winkelpagina's te controleren. De geplande checks lopen daarna ongeveer elke 10 minuten, met mogelijke vertraging door GitHub.
 
 De bot waarschuwt bij een **mogelijke** voorraadindicatie, niet bij een gegarandeerde bestelling. Dynamische sites en botbeveiliging kunnen scans verhinderen; die krijgen de status `unknown`. Kijk altijd zelf naar prijs, verzendbaarheid en betaalpagina. De bot koopt nooit zelf iets.
+
+## Betrouwbaarheid en wat de status betekent
+
+- **possible**: De productpagina én (voor OkaySoft) de categorie tonen voldoende signalen voor een mogelijk bestelbare controller. De koopbaarheid moet je nog zelf controleren.
+- **out**: Een expliciete uitverkochtmelding op een voor dit product relevante pagina.
+- **unknown**: De winkel blokkeert de automatische controle, de pagina laadt dynamisch of bevat onvoldoende productinformatie. *Dit is geen bewijs van uitverkocht.*
+- Bij OkaySoft wordt het productscherm **altijd** met de bijbehorende categoriepagina vergeleken. Een verzenddatum of een verouderde voorbestelknop veroorzaakt **geen** voorraadmelding meer.
+- In de **GitHub Actions**-uitvoering staat een overzicht van de status per winkel. Veel Duitse webshops blokkeren aanvragen vanuit GitHub met HTTP 403; dit omzeilen we niet met CAPTCHA-bypasses. Daardoor is de monitoring niet gegarandeerd volledig.
+
+De eerste echte diagnose liet zien dat OkaySoft uitleesbaar was, maar op 'out' stond. De overige winkels waren vaak 'unknown'. Voeg bij voorkeur ook de eigen meldingen van winkels of een gespecialiseerde voorraadmeldingsdienst toe als tweede kanaal.
 
 ## Privacy en kosten
 - GitHub Actions is op publieke repositories gratis met de gebruikelijke GitHub-hosted runners; planwijzigingen of gebruikslimieten kunnen van toepassing zijn.
