@@ -1,0 +1,55 @@
+name: GTA 6 White DualSense voorraadcheck
+
+on:
+  schedule:
+    - cron: '3,13,23,33,43,53 * * * *'
+  workflow_dispatch:
+    inputs:
+      test_message:
+        description: 'Stuur alleen een testbericht naar Telegram'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gta6-white-tracker
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install packages
+        run: pip install -r requirements.txt
+      - name: Run parser tests
+        run: python -m unittest discover -s tests -v
+      - name: Check stock or send Telegram test
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TEST_MESSAGE: ${{ inputs.test_message }}
+        run: |
+          if [ "$TEST_MESSAGE" = "true" ]; then
+            python tracker.py --test-message
+          else
+            python tracker.py
+          fi
+      - name: Save stock state for deduplication
+        if: ${{ inputs.test_message != true }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add state.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Store latest stock checks [skip ci]'
+            git push
+          fi
