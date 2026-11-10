@@ -48,6 +48,15 @@ STORES = {
     "OkaySoft": {
         "url": "https://www.okaysoft.de/PlayStation-5/Hardware1/PS5-Controller-DualSense-5-V3-Grand-Theft-Auto-VI-Limited-Edition.html",
         "kind": "okaysoft",
+        "listing_url": "https://www.okaysoft.de/PlayStation-5/Hardware1/?_artperpage=60&cl=alist&cnid=6414a91c843be3c9f6cfbe6518432583&ldtype=infogrid&pgNr=0&searchparam=",
+    },
+    "Galaxus": {
+        "url": "https://www.galaxus.de/de/s1/product/sony-dualsense-wireless-controller-grand-theft-auto-vi-white-limited-edition-ps5-gaming-controller-76618335",
+        "kind": "galaxus",
+    },
+    "Cyberport": {
+        "url": "https://www.cyberport.de/gaming/xbox/xbox-zubehoer/sony/pdp/7b14-03v/sony-playstation-dualsense-wireless-controller-gta-vi-white.html",
+        "kind": "cyberport",
     },
 }
 
@@ -137,11 +146,16 @@ def check_stock(kind, html):
                 ("sofort lieferbar", "sofort verfügbar", "auf lager", "lieferbar in"))):
             return "possible", "purchase button and availability wording detected"
     elif kind == "okaysoft":
+        # The category tile is checked separately before a notification.
         if "in den warenkorb" in text and any(x in text for x in
                 ("jetzt vorbestellen", "vorbestellung", "sofort lieferbar", "auf lager")):
-            return "possible", "cart button and preorder or delivery text detected"
-        if "vorbestellung" in text and "versand ab" in text:
-            return "possible", "preorder shipping date displayed"
+            return "possible", "purchase button on product page"
+    elif kind == "galaxus":
+        if "in den warenkorb" in text and "benachrichtigen, wenn lieferbar" not in text:
+            return "possible", "Galaxus product purchase button detected"
+    elif kind == "cyberport":
+        if "in den warenkorb" in text and "verfügbar ab" in text:
+            return "possible", "Cyberport preorder cart detected"
     elif kind == "playstation":
         if structured == "possible":
             return "possible", "structured product offer suggests pre-order/stock"
@@ -152,6 +166,27 @@ def check_stock(kind, html):
     if structured == "possible":
         return "possible", "structured product offer suggests availability"
     return "unknown", "no reliable availability indicator found"
+
+def check_okaysoft_listing(html):
+    """Check the controller's own product tile on OkaySoft's category page.
+
+    The detail page can retain an outdated preorder button even when the
+    live category tile explicitly says 'Derzeit nicht verfügbar'.
+    Never treat a shipping/release date alone as positive stock evidence.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    text = normalize(soup.get_text(" ", strip=True))
+    title = "ps5 controller dualsense 5 v3 - grand theft auto vi limited edition"
+    start = text.find(title)
+    if start < 0:
+        return "unknown", "controller not found in OkaySoft category listing"
+    segment = text[start + len(title):start + len(title) + 280]
+    if any(x in segment for x in ("derzeit nicht verfügbar", "nicht lieferbar", "ausverkauft")):
+        return "out", "OkaySoft category explicitly marks this product unavailable"
+    if "in den warenkorb" in segment and any(x in segment for x in
+            ("vorbestellung", "lagernd", "sofort versandbereit")):
+        return "possible", "OkaySoft category has a preorder/cart option"
+    return "unknown", "no clearly available purchase option on the OkaySoft category tile"
 
 def send_telegram(message, url=None):
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
@@ -199,6 +234,23 @@ def run():
             response = session.get(item["url"], timeout=18, allow_redirects=True)
             response.raise_for_status()
             status, reason = check_stock(item["kind"], response.text)
+            if item["kind"] == "okaysoft":
+                try:
+                    listing = session.get(item["listing_url"], timeout=18)
+                    listing.raise_for_status()
+                    listed, listing_reason = check_okaysoft_listing(listing.text)
+                    if listed == "out":
+                        # An explicit negative from the category takes precedence.
+                        status, reason = "out", listing_reason
+                    elif listed != "possible" or status != "possible":
+                        status, reason = "unknown", f"product/listing not both confirmed ({reason}; {listing_reason})"
+                    else:
+                        reason = listing_reason + "; product page also has a purchase button"
+                except requests.RequestException:
+                    status, reason = "unknown", "OkaySoft category check failed; cannot validate availability"
+        except requests.HTTPError as exc:
+            code = exc.response.status_code if exc.response is not None else "?"
+            status, reason = "unknown", f"retailer HTTP {code}; unable to verify"
         except requests.RequestException as exc:
             status, reason = "unknown", f"connection issue ({type(exc).__name__})"
         print(f"{name}: {status} ({reason})")
