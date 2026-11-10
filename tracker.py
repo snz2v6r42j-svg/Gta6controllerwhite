@@ -144,15 +144,28 @@ def check_stock(kind, html):
     return "unknown", "no reliable availability indicator found"
 
 def send_telegram(message, url=None):
-    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    # BotFather's long tokens are sometimes copied with an accidental line break.
+    token = re.sub(r"[\s\u200b\u200c\u200d\ufeff]+", "", token)
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
     if not token or not chat_id:
         raise RuntimeError("Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID as repository secrets")
+    if not re.fullmatch(r"\d{5,15}:[A-Za-z0-9_-]{20,}", token):
+        raise RuntimeError("Telegram token format invalid. Re-copy the complete BotFather token into GitHub Secrets.")
     payload = {"chat_id": chat_id, "text": message, "disable_web_page_preview": True}
     if url:
         payload["reply_markup"] = {"inline_keyboard": [[{"text": "Direct naar de winkel", "url": url}]]}
-    response = requests.post(BOT_URL.format(token=token), json=payload, timeout=20)
-    response.raise_for_status()
+    try:
+        response = requests.post(BOT_URL.format(token=token), json=payload, timeout=20)
+    except requests.RequestException as exc:
+        raise RuntimeError(f"Could not reach Telegram ({type(exc).__name__}); check connectivity") from None
+    # Avoid logging the full secret-bearing Bot API URL in requests' HTTPError.
+    if response.status_code >= 400:
+        try:
+            reason = str(response.json().get("description", "unknown error"))
+        except ValueError:
+            reason = "unreadable error"
+        raise RuntimeError(f"Telegram HTTP {response.status_code}: {reason}")
     data = response.json()
     if not data.get("ok"):
         raise RuntimeError(f"Telegram rejected message: {data.get('description', 'unknown')}")
