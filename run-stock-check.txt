@@ -1,1 +1,1 @@
-Werkelijke voorraadcontrole met 15 unit-tests na strengere OkaySoft-check.
+Laatste volledige controle: negen Duitse shops, statusvalidatie en GitHub scan-overzicht.
