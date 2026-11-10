@@ -226,6 +226,7 @@ def run():
     session = requests.Session()
     session.headers.update({"User-Agent": USER_AGENT, "Accept-Language": "de-DE,de;q=0.9,en;q=0.6"})
     issues = 0
+    report = []
 
     for name, item in STORES.items():
         old = state.get(name, {})
@@ -254,6 +255,7 @@ def run():
         except requests.RequestException as exc:
             status, reason = "unknown", f"connection issue ({type(exc).__name__})"
         print(f"{name}: {status} ({reason})")
+        report.append((name, status, reason))
         if status == "unknown":
             continue
         if status == previous:
@@ -278,6 +280,28 @@ def run():
                 continue
         state[name] = new
     STATE_FILE.write_text(json.dumps(state, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+    verified = sum(1 for _, status, _ in report if status != "unknown")
+    print(f"Verification coverage: {verified}/{len(report)} shops returned a readable stock status")
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary:
+        lines = [
+            "## GTA 6 White DualSense — laatste scan",
+            f"Gecontroleerd (UTC): {now}",
+            f"**Betrouwbaar uitleesbare winkels: {verified}/{len(report)}.**",
+            "",
+            "| Winkel | Status | Toelichting |",
+            "|---|---|---|",
+        ]
+        for name, status, reason in report:
+            description = reason.replace("|", "/").replace("\n", " ")
+            lines.append(f"| {name} | {status} | {description} |")
+        lines.extend(["", "⚠️ 'unknown' betekent niet dat de controller is uitverkocht; de winkelpagina kon niet betrouwbaar worden gecontroleerd.",
+                      "⚠️ 'possible' betekent een bestelindicatie, geen gegarandeerde voorraad."])
+        try:
+            with open(summary, "a", encoding="utf-8") as out:
+                out.write("\n".join(lines) + "\n")
+        except OSError as exc:
+            print(f"Could not write GitHub summary: {type(exc).__name__}", file=sys.stderr)
     if issues:
         sys.exit(1)
 
